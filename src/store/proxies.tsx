@@ -73,7 +73,7 @@ export function fetchProxies(apiConfig: ClashAPIConfig) {
       const { history } = proxies[name] || { history: [] };
       const h = history[history.length - 1];
       if (h && typeof h.delay === 'number') {
-        delayNext[name] = { number: h.delay };
+        delayNext[name] = { number: h.delay ,loss: h.loss, downfrom: h.downfrom };
       }
     }
 
@@ -300,7 +300,7 @@ function requestDelayForProxyOnce(apiConfig: ClashAPIConfig, name: string) {
     if (res.ok === false) {
       error = res.statusText;
     }
-    const { delay } = await res.json();
+    const { delay, loss, downfrom } = await res.json();
 
     const delayPrev = getDelay(getState());
     const delayNext = {
@@ -308,6 +308,8 @@ function requestDelayForProxyOnce(apiConfig: ClashAPIConfig, name: string) {
       [name]: {
         error,
         number: delay,
+        loss: loss,
+        downfrom: downfrom
       },
     };
 

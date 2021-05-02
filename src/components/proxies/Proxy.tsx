@@ -40,6 +40,8 @@ function getLabelColor({
 function getProxyDotBackgroundColor(
   latency: {
     number?: number;
+    loss?: number;
+    downfrom?: number;
   },
   proxyType: string
 ) {
@@ -156,6 +158,8 @@ function ProxyImpl({
         <span className={s0.proxyType} style={{ opacity: now ? 0.6 : 0.2 }}>
           {formatProxyType(proxy.type)}
         </span>
+        <span style={{ opacity: 0.2, fontSize: '9pt' }}>{latency && 'L:'+latency.loss}{latency && latency.downfrom > 0 && '/D'}</span>
+        <span style={{ opacity: 0.6, fontSize: '9pt' }}>{!latency && proxy.now}</span>
         {latency && latency.number ? (
           <ProxyLatency number={latency.number} color={color} />
         ) : null}
@@ -169,7 +173,7 @@ const mapState = (s: any, { name }) => {
   const delay = getDelay(s);
   return {
     proxy: proxies[name],
-    latency: delay[name],
+    latency: delay[name]
   };
 };
 

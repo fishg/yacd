@@ -36,7 +36,7 @@ export type ProxyItem = {
   now?: string;
 };
 export type ProxiesMapping = Record<string, ProxyItem>;
-export type DelayMapping = Record<string, { number?: number }>;
+export type DelayMapping = Record<string, { number?: number, loss?: number, downfrom?: number }>;
 
 export type ProxyProvider = {
   name: string;
