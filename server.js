@@ -13,7 +13,6 @@ const publicPath = config.output.publicPath;
 
 config.entry.app.import.unshift('webpack-hot-middleware/client');
 config.plugins.push(
-  new webpack.HotModuleReplacementPlugin(),
   new webpack.NoEmitOnErrorsPlugin()
 );
 

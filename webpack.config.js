@@ -15,7 +15,7 @@ const { InjectManifest } = require('workbox-webpack-plugin');
 const pkg = require('./package.json');
 
 process.env.BABEL_ENV = process.env.NODE_ENV;
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = false;
 
 const publicPath = '';
 

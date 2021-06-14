@@ -4,9 +4,10 @@
   "description": "Yet another Clash dashboard",
   "scripts": {
     "lint": "eslint --fix --cache src",
-    "start": "NODE_ENV=development node server.js",
-    "build": "NODE_ENV=production webpack",
-    "pretty": "prettier --single-quote --write 'src/**/*.{js,scss,ts,tsx,md}'"
+    "start": "set NODE_ENV=development && node server.js",
+    "build": "set NODE_ENV=production && webpack",
+    "pretty": "prettier --single-quote --write 'src/**/*.{js,scss,ts,tsx,md}'",
+    "scp": "scp -r public/* qexw2c02:/usr/share/nginx/html/99/xljksdjferwr011XyPs/yacd"
   },
   "browserslist": [
     ">0.25%",
