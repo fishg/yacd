@@ -102,13 +102,13 @@ function ProxySmallImpl({
 
   return (
     <div
-      title={title}
       className={className}
+      title={now?'':title}
       style={{ background: color }}
       onClick={doSelect}
       onKeyDown={handleKeyDown}
       role={isSelectable ? 'menuitem' : ''}
-    />
+    >{now ? <div style={{position: "relative",top: "15px",width: "200px",fontSize: "10pt",color:'#f88a02'}}>{title}</div>:''}</div>
   );
 }
 
