@@ -1,4 +1,7 @@
-import './Root.css';
+import './Root.scss';
+import '@fontsource/roboto-mono/latin-400.css';
+import '@fontsource/open-sans/latin-400.css';
+import '@fontsource/open-sans/latin-700.css';
 
 import React, { lazy, Suspense } from 'react';
 import { QueryClientProvider } from 'react-query';
@@ -6,6 +9,7 @@ import { PartialRouteObject } from 'react-router';
 import { HashRouter as Router, useRoutes } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
 import { About } from 'src/components/about/About';
+import Loading from 'src/components/Loading';
 import { Head } from 'src/components/shared/Head';
 import { queryClient } from 'src/misc/query';
 
@@ -15,51 +19,16 @@ import APIDiscovery from './APIDiscovery';
 import ErrorBoundary from './ErrorBoundary';
 import Home from './Home';
 import Loading2 from './Loading2';
-import s0 from './Root.module.css';
+import s0 from './Root.module.scss';
 import SideBar from './SideBar';
 import StateProvider from './StateProvider';
 import StyleGuide from './StyleGuide';
 
-const Connections = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "conns" */
-      /* webpackPrefetch: true */
-      './Connections'
-    )
-);
-const Config = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "config" */
-      /* webpackPrefetch: true */
-      './Config'
-    )
-);
-const Logs = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "logs" */
-      /* webpackPrefetch: true */
-      './Logs'
-    )
-);
-const Proxies = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "proxies" */
-      /* webpackPrefetch: true */
-      './proxies/Proxies'
-    )
-);
-const Rules = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "rules" */
-      /* webpackPrefetch: true */
-      './Rules'
-    )
-);
+const Connections = lazy(() => import('./Connections'));
+const Config = lazy(() => import('./Config'));
+const Logs = lazy(() => import('./Logs'));
+const Proxies = lazy(() => import('./proxies/Proxies'));
+const Rules = lazy(() => import('./Rules'));
 
 const routes = [
   { path: '/', element: <Home /> },
@@ -69,7 +38,9 @@ const routes = [
   { path: '/proxies', element: <Proxies /> },
   { path: '/rules', element: <Rules /> },
   { path: '/about', element: <About /> },
-  __DEV__ ? { path: '/style', element: <StyleGuide /> } : false,
+  process.env.NODE_ENV === 'development'
+    ? { path: '/style', element: <StyleGuide /> }
+    : false,
 ].filter(Boolean) as PartialRouteObject[];
 
 function RouteInnerApp() {
@@ -105,7 +76,7 @@ const Root = () => (
           <Router>
             <div className={s0.app}>
               <Head />
-              <Suspense fallback={<Loading2 />}>
+              <Suspense fallback={<Loading />}>
                 <App />
               </Suspense>
             </div>

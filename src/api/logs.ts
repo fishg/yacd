@@ -1,15 +1,10 @@
-import { ClashAPIConfig } from 'src/types';
+import { pad0 } from 'src/misc/utils';
+import { Log } from 'src/store/types';
+import { LogsAPIConfig } from 'src/types';
 
-import { buildWebSocketURL, getURLAndInit } from '../misc/request-helper';
+import { buildLogsWebSocketURL, getURLAndInit } from '../misc/request-helper';
 
-type LogsAPIConfig = ClashAPIConfig & { logLevel: string };
-type LogEntry = {
-  time?: string;
-  id?: string;
-  even?: boolean;
-  // and some other props
-};
-type AppendLogFn = (x: LogEntry) => void;
+type AppendLogFn = (x: Log) => void;
 
 const endpoint = '/logs';
 const textDecoder = new TextDecoder('utf-8');
@@ -21,9 +16,11 @@ const getRandomStr = () => {
 let even = false;
 let fetched = false;
 let decoded = '';
+let ws: WebSocket;
+let prevAppendLogFn: AppendLogFn;
 
 function appendData(s: string, callback: AppendLogFn) {
-  let o: LogEntry;
+  let o: Partial<Log>;
   try {
     o = JSON.parse(s);
   } catch (err) {
@@ -32,12 +29,23 @@ function appendData(s: string, callback: AppendLogFn) {
   }
 
   const now = new Date();
-  const time = now.toLocaleString('zh-Hans');
+  const time = formatDate(now);
   // mutate input param in place intentionally
   o.time = time;
   o.id = +now - 0 + getRandomStr();
   o.even = even = !even;
-  callback(o);
+  callback(o as Log);
+}
+
+function formatDate(d: Date) {
+  // 19-03-09 12:45
+  const YY = d.getFullYear() % 100;
+  const MM = pad0(d.getMonth() + 1, 2);
+  const dd = pad0(d.getDate(), 2);
+  const HH = pad0(d.getHours(), 2);
+  const mm = pad0(d.getMinutes(), 2);
+  const ss = pad0(d.getSeconds(), 2);
+  return `${YY}-${MM}-${dd} ${HH}:${mm}:${ss}`;
 }
 
 function pump(reader: ReadableStreamDefaultReader, appendLog: AppendLogFn) {
@@ -68,7 +76,14 @@ function pump(reader: ReadableStreamDefaultReader, appendLog: AppendLogFn) {
   });
 }
 
-let apiConfigSnapshot: LogsAPIConfig;
+/** loose hashing of the connection configuration */
+function makeConnStr(c: LogsAPIConfig) {
+  const keys = Object.keys(c);
+  keys.sort();
+  return keys.map((k) => c[k]).join('|');
+}
+
+let prevConnStr: string;
 let controller: AbortController;
 
 // 1 OPEN
@@ -77,12 +92,13 @@ let controller: AbortController;
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
 let wsState: number;
 export function fetchLogs(apiConfig: LogsAPIConfig, appendLog: AppendLogFn) {
+  if (apiConfig.logLevel === 'uninit') return;
   if (fetched || wsState === 1) return;
+  prevAppendLogFn = appendLog;
   wsState = 1;
-  const url = buildWebSocketURL(apiConfig, endpoint);
-  const ws = new WebSocket(url);
-  ws.addEventListener('error', () => (wsState = 3));
-  ws.addEventListener('close', function (_ev) {
+  const url = buildLogsWebSocketURL(apiConfig, endpoint);
+  ws = new WebSocket(url);
+  ws.addEventListener('error', () => {
     wsState = 3;
     fetchLogsWithFetch(apiConfig, appendLog);
   });
@@ -91,20 +107,23 @@ export function fetchLogs(apiConfig: LogsAPIConfig, appendLog: AppendLogFn) {
   });
 }
 
+export function reconnect(apiConfig: LogsAPIConfig) {
+  if (!prevAppendLogFn || !ws) return;
+  ws.close();
+  wsState = 3;
+  fetched = false;
+  fetchLogs(apiConfig, prevAppendLogFn);
+}
+
 function fetchLogsWithFetch(apiConfig: LogsAPIConfig, appendLog: AppendLogFn) {
-  if (
-    controller &&
-    (apiConfigSnapshot.baseURL !== apiConfig.baseURL ||
-      apiConfigSnapshot.secret !== apiConfig.secret ||
-      apiConfigSnapshot.logLevel !== apiConfig.logLevel)
-  ) {
+  if (controller && makeConnStr(apiConfig) !== prevConnStr) {
     controller.abort();
   } else if (fetched) {
     return;
   }
 
   fetched = true;
-  apiConfigSnapshot = { ...apiConfig };
+  prevConnStr = makeConnStr(apiConfig);
 
   controller = new AbortController();
   const signal = controller.signal;
