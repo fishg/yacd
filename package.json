@@ -8,6 +8,7 @@
     "start": "vite",
     "build": "vite build",
     "serve": "vite preview",
+    "scp": "scp -r public/* qexw2c02:/usr/share/nginx/html/99/xljksdjferwr011XyPs/yacd",
     "pretty": "prettier --single-quote --write 'src/**/*.{js,scss,ts,tsx,md}'"
   },
   "browserslist": [
